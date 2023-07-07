@@ -18,32 +18,41 @@ const imagePath = path.resolve(
 const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 async function changeWallpaper() {
-	// const searchTerms = ['desktop_wallpapers', 'space', 'flowers'];
-	const searchTerms = ['tokyo', 'cities', 'galaxy'];
-	const apiUrl = `https://api.unsplash.com/search/photos?query=${random(
-		searchTerms
-	)}&page=${Math.floor(Math.random() * 250)}&orientation=landscape`;
-	const accessKey = process.env.ACCESS_KEY;
-	const data = await fetch(apiUrl, {
-		headers: {
-			Authorization: `Client-ID ${accessKey}`,
-		},
-	})
-		.then((res) => res.json())
-		.then((d) => d);
-	do {
-		randomPhoto = random(data.results);
-	} while (currentID === randomPhoto.id);
-	currentID = randomPhoto.id;
-	const imageUrl = randomPhoto.urls.full;
+	try {
+		// const searchTerms = ['desktop_wallpapers', 'space', 'flowers'];
+		const searchTerms = ['tokyo', 'cities', 'galaxy'];
+		const apiUrl = `https://api.unsplash.com/search/photos?query=${random(
+			searchTerms
+		)}&page=${Math.floor(Math.random() * 250)}&orientation=landscape`;
+		const accessKey = process.env.ACCESS_KEY;
+		const data = await fetch(apiUrl, {
+			headers: {
+				Authorization: `Client-ID ${accessKey}`,
+			},
+		})
+			.then((res) => res.json())
+			.then((d) => d);
+		do {
+			randomPhoto = random(data.results);
+		} while (currentID === randomPhoto.id);
+		currentID = randomPhoto.id;
+		const imageUrl = randomPhoto.urls.full;
 
-	const imageResponse = await fetch(imageUrl);
-	const streamPipeline = promisify(pipeline);
+		const imageResponse = await fetch(imageUrl);
+		const streamPipeline = promisify(pipeline);
 
-	await streamPipeline(imageResponse.body, fs.createWriteStream(imagePath));
-	console.log('Image downloaded and saved successfully.');
-	await setWallpaper(imagePath);
-	console.log('Wallpaper updated successfully');
+		await streamPipeline(imageResponse.body, fs.createWriteStream(imagePath));
+		console.log('Image downloaded and saved successfully.');
+	} catch (err) {
+		console.error(`Something went wrong while downloading or saving the Image`);
+	}
+
+	try {
+		await setWallpaper(imagePath);
+		console.log('Wallpaper updated successfully');
+	} catch (err) {
+		console.err(`OOPS! Error updating the wallpaper`);
+	}
 }
 
 (async () => {
